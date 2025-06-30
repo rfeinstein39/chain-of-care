@@ -11,13 +11,25 @@
       padding: 20px;
     }
     #flowchart {
-      display: grid;
-      grid-template-columns: repeat(4, 80px);
-      grid-gap: 10px;
-      justify-content: center;
+      position: relative;
+      width: 400px;
+      height: 360px;
       margin: 20px auto;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+    .slot {
+      position: absolute;
+      width: 80px;
+      height: 112px;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .card {
+      position: absolute;
       width: 80px;
       height: 112px;
       border: 1px solid #333;
@@ -30,6 +42,7 @@
       font-size: 10px;
       box-shadow: 1px 1px 5px rgba(0,0,0,0.2);
       cursor: pointer;
+      z-index: 10;
     }
     #message {
       font-size: 1.2em;
@@ -45,7 +58,7 @@
       padding: 20px;
       border: 2px solid #000;
       border-radius: 10px;
-      z-index: 10;
+      z-index: 20;
     }
     #dialog button {
       margin: 10px;
@@ -55,14 +68,23 @@
 </head>
 <body>
   <h1>Chain of Care</h1>
-  <div id="flowchart"></div>
+  <div id="flowchart">
+    <!-- Slots -->
+    <div class="slot" style="top:0px; left:0px" data-slot="0"></div>
+    <div class="slot" style="top:0px; left:100px" data-slot="1"></div>
+    <div class="slot" style="top:0px; left:200px" data-slot="2"></div>
+    <div class="slot" style="top:0px; left:300px" data-slot="3"></div>
+    <div class="slot" style="top:120px; left:200px" data-slot="4"></div>
+    <div class="slot" style="top:120px; left:300px" data-slot="5"></div>
+    <div class="slot" style="top:240px; left:200px" data-slot="6"></div>
+    <div class="slot" style="top:240px; left:300px" data-slot="7"></div>
+  </div>
   <div id="message"></div>
   <div id="dialog">
     <p>Great job! Play again?</p>
     <button onclick="resetGame()">Yes</button>
     <button onclick="dialog.style.display='none'">No</button>
   </div>
-
   <script>
     const correctOrder = [
       "Patient presents with chest pain",
@@ -75,11 +97,11 @@
       "Medical Therapy"
     ];
 
-    let flowchart = document.getElementById('flowchart');
-    let message = document.getElementById('message');
-    let dialog = document.getElementById('dialog');
-    let currentCards = [];
-    let selected = null;
+    let cards = [];
+    let selectedIndex = null;
+    const flowchart = document.getElementById('flowchart');
+    const message = document.getElementById('message');
+    const dialog = document.getElementById('dialog');
 
     function shuffle(array) {
       let arr = array.slice();
@@ -90,45 +112,53 @@
       return arr;
     }
 
-    function renderFlowchart() {
-      flowchart.innerHTML = '';
-      currentCards.forEach((text, idx) => {
+    function placeCards() {
+      const slotPositions = [
+        [0, 0], [0, 100], [0, 200], [0, 300],
+        [120, 200], [120, 300], [240, 200], [240, 300]
+      ];
+      document.querySelectorAll('.card').forEach(c => c.remove());
+      cards.forEach((text, i) => {
         const card = document.createElement('div');
         card.className = 'card';
+        card.style.top = slotPositions[i][0] + 'px';
+        card.style.left = slotPositions[i][1] + 'px';
         card.textContent = text;
-        card.onclick = () => selectCard(idx);
+        card.onclick = () => handleClick(i);
         flowchart.appendChild(card);
       });
     }
 
-    function selectCard(idx) {
-      if (selected === null) {
-        selected = idx;
-        message.textContent = "";
+    function handleClick(index) {
+      if (selectedIndex === null) {
+        selectedIndex = index;
+        message.textContent = '';
       } else {
-        if (correctOrder[selected] === currentCards[idx]) {
-          [currentCards[selected], currentCards[idx]] = [currentCards[idx], currentCards[selected]];
-          renderFlowchart();
+        const selectedCard = cards[selectedIndex];
+        const targetCard = cards[index];
+        if (correctOrder[index] === selectedCard) {
+          [cards[selectedIndex], cards[index]] = [cards[index], cards[selectedIndex]];
+          placeCards();
           message.textContent = "Nice!";
-          playSound('success');
+          playSound("success");
           checkVictory();
         } else {
           message.textContent = "Try again.";
-          playSound('error');
+          playSound("error");
         }
-        selected = null;
+        selectedIndex = null;
       }
     }
 
     function playSound(type) {
-      const audio = new Audio(type === 'success' ?
-        'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg' :
-        'https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+      const audio = new Audio(type === 'success'
+        ? 'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg'
+        : 'https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
       audio.play();
     }
 
     function checkVictory() {
-      if (currentCards.every((card, idx) => card === correctOrder[idx])) {
+      if (cards.every((card, i) => card === correctOrder[i])) {
         setTimeout(() => {
           dialog.style.display = 'block';
         }, 500);
@@ -136,8 +166,8 @@
     }
 
     function resetGame() {
-      currentCards = shuffle(correctOrder);
-      renderFlowchart();
+      cards = shuffle(correctOrder);
+      placeCards();
       dialog.style.display = 'none';
       message.textContent = '';
     }
