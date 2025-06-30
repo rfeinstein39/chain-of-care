@@ -10,16 +10,16 @@
       text-align: center;
       padding: 20px;
     }
-    #board {
+    #flowchart {
       display: grid;
-      grid-template-columns: repeat(4, 100px);
+      grid-template-columns: repeat(4, 80px);
       grid-gap: 10px;
       justify-content: center;
       margin: 20px auto;
     }
     .card {
-      width: 100px;
-      height: 140px;
+      width: 80px;
+      height: 112px;
       border: 1px solid #333;
       border-radius: 10px;
       background: white;
@@ -27,7 +27,7 @@
       align-items: center;
       justify-content: center;
       padding: 5px;
-      font-size: 12px;
+      font-size: 10px;
       box-shadow: 1px 1px 5px rgba(0,0,0,0.2);
       cursor: pointer;
     }
@@ -55,7 +55,7 @@
 </head>
 <body>
   <h1>Chain of Care</h1>
-  <div id="board"></div>
+  <div id="flowchart"></div>
   <div id="message"></div>
   <div id="dialog">
     <p>Great job! Play again?</p>
@@ -75,7 +75,7 @@
       "Medical Therapy"
     ];
 
-    let board = document.getElementById('board');
+    let flowchart = document.getElementById('flowchart');
     let message = document.getElementById('message');
     let dialog = document.getElementById('dialog');
     let currentCards = [];
@@ -90,14 +90,14 @@
       return arr;
     }
 
-    function renderBoard() {
-      board.innerHTML = '';
+    function renderFlowchart() {
+      flowchart.innerHTML = '';
       currentCards.forEach((text, idx) => {
         const card = document.createElement('div');
         card.className = 'card';
         card.textContent = text;
         card.onclick = () => selectCard(idx);
-        board.appendChild(card);
+        flowchart.appendChild(card);
       });
     }
 
@@ -108,7 +108,7 @@
       } else {
         if (correctOrder[selected] === currentCards[idx]) {
           [currentCards[selected], currentCards[idx]] = [currentCards[idx], currentCards[selected]];
-          renderBoard();
+          renderFlowchart();
           message.textContent = "Nice!";
           playSound('success');
           checkVictory();
@@ -137,7 +137,7 @@
 
     function resetGame() {
       currentCards = shuffle(correctOrder);
-      renderBoard();
+      renderFlowchart();
       dialog.style.display = 'none';
       message.textContent = '';
     }
